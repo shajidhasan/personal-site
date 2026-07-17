@@ -10,7 +10,7 @@ type ParseResult = { error: string; values?: never } | { error?: never; values: 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 // Shared parser for the create and update blog post form actions. Content HTML is
-// rendered in the browser before submit (see BlogForm pages) and arrives as
+// rendered in the browser before submit (see BlogPostEditor) and arrives as
 // hidden inputs — the server never touches the markdown pipeline.
 export const parseBlogForm = (formData: FormData): ParseResult => {
 	const str = (name: string) => {
