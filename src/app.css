@@ -83,7 +83,7 @@
 	}
 
 	.shiki {
-		@apply scrollbar min-h-[200px] scrollbar-thumb-gray-700 scrollbar-track-transparent overflow-x-auto rounded-lg py-4;
+		@apply scrollbar scrollbar-thumb-gray-700 scrollbar-track-transparent overflow-x-auto rounded-lg py-4;
 	}
 
 	html.dark .shiki,
