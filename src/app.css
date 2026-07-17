@@ -1,0 +1,173 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/typography';
+@plugin 'tailwind-scrollbar';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@font-face {
+	font-family: 'Inter';
+	src: url('$lib/assets/fonts/InterVariable.woff2') format('woff2');
+	font-display: swap;
+	font-weight: 100 900;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'Inter Fallback';
+	src: local('Arial');
+	ascent-override: 89.79%;
+	descent-override: 22.36%;
+	line-gap-override: 0%;
+	size-adjust: 107.89%;
+}
+
+@theme {
+	--font-sans: 'Inter', 'Inter Fallback', system-ui, sans-serif;
+	--font-mono: 'Space Mono', monospace;
+
+	--color-gray-50: oklch(0.985 0 0);
+	--color-gray-100: oklch(0.967 0.001 286.375);
+	--color-gray-200: oklch(0.92 0.004 286.32);
+	--color-gray-300: oklch(0.871 0.006 286.286);
+	--color-gray-400: oklch(0.705 0.015 286.067);
+	--color-gray-500: oklch(0.552 0.016 285.938);
+	--color-gray-600: oklch(0.442 0.017 285.786);
+	--color-gray-700: oklch(0.37 0.013 285.805);
+	--color-gray-800: oklch(0.274 0.006 286.033);
+	--color-gray-900: oklch(0.21 0.006 285.885);
+	--color-gray-950: oklch(0.141 0.005 285.823);
+}
+
+@layer base {
+	html {
+		overflow-y: scroll;
+		font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+	}
+
+	@supports (scrollbar-gutter: stable) {
+		html {
+			overflow-y: auto;
+			scrollbar-gutter: stable;
+		}
+	}
+
+	body {
+		@apply scroll-smooth bg-white text-gray-900 antialiased dark:bg-gray-900 dark:text-gray-100;
+	}
+
+	a.link,
+	.bio a {
+		position: relative;
+		background: linear-gradient(
+			to top,
+			color-mix(in oklab, var(--color-rose-500) 60%, transparent),
+			color-mix(in oklab, var(--color-rose-500) 60%, transparent)
+		);
+		background-repeat: no-repeat;
+		background-position: 0 100%;
+		background-size: 100% calc(var(--spacing) * 2);
+
+		box-decoration-break: clone;
+		-webkit-box-decoration-break: clone;
+
+		padding: 0 calc(var(--spacing) * 0.5);
+		margin: 0 calc(var(--spacing) * -0.5);
+
+		transition: background-size 150ms ease-in-out;
+	}
+
+	a.link:hover,
+	.bio a:hover {
+		background-size: 100% calc(100% + var(--spacing) * 0.5);
+	}
+
+	.shiki {
+		@apply scrollbar min-h-[200px] scrollbar-thumb-gray-700 scrollbar-track-transparent overflow-x-auto rounded-lg py-4;
+	}
+
+	html.dark .shiki,
+	html.dark .shiki span {
+		color: var(--shiki-dark) !important;
+		background-color: var(--shiki-dark-bg) !important;
+		/* Optional, if you also want font styles */
+		font-style: var(--shiki-dark-font-style) !important;
+		font-weight: var(--shiki-dark-font-weight) !important;
+		text-decoration: var(--shiki-dark-text-decoration) !important;
+	}
+
+	.prose img {
+		@apply mx-auto block rounded-lg;
+	}
+
+	#nprogress .bar {
+		@apply bg-white!;
+	}
+
+	main {
+		@apply min-h-[calc(100vh_-_172px)] sm:min-h-[calc(100vh_-_148px)];
+	}
+
+	.cm-editor {
+		@apply h-full;
+	}
+}
+
+/* Admin ("Control Center") component classes — always-dark zinc UI */
+@layer components {
+	.dialog {
+		@apply fixed top-1/2 left-1/2 w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-lg border border-zinc-700 bg-zinc-800 p-0 text-zinc-200 shadow-xl backdrop:bg-zinc-900/70 backdrop:backdrop-blur-sm;
+	}
+
+	.label {
+		@apply mb-1.5 block text-sm font-medium tracking-wide text-zinc-300;
+	}
+
+	.input {
+		@apply block w-full rounded-md border border-zinc-600 bg-zinc-800 px-3.5 py-2.5 text-zinc-100 placeholder:text-zinc-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500 focus:outline-none;
+	}
+
+	.textarea {
+		@apply block w-full rounded-md border border-zinc-600 bg-zinc-800 px-3.5 py-2.5 font-mono text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500 focus:outline-none;
+	}
+
+	.button {
+		@apply inline-flex w-full items-center gap-2 rounded-md border px-4 py-2.5 tracking-wider transition-all duration-150 ease-in-out sm:w-auto;
+	}
+
+	.button-primary {
+		@apply border-rose-600 bg-gradient-to-r from-rose-500 to-rose-600 font-bold text-white hover:from-rose-600 hover:to-rose-700 active:from-rose-700 active:to-rose-800;
+	}
+
+	.button-secondary {
+		@apply border-zinc-600 bg-zinc-700 font-medium text-zinc-200 hover:border-zinc-500 hover:bg-zinc-600;
+	}
+
+	.button-danger {
+		@apply border-red-600 bg-red-600 font-bold text-white hover:border-red-700 hover:bg-red-700 active:bg-red-800;
+	}
+
+	.button-toolbar {
+		@apply rounded-md p-1.5 text-zinc-400 transition-colors hover:text-rose-500 focus:bg-zinc-700 focus:ring-1 focus:ring-rose-500 focus:outline-none;
+	}
+
+	.button-toolbar-danger {
+		@apply rounded-md p-1.5 text-zinc-400 transition-colors hover:text-red-500 focus:bg-zinc-700 focus:ring-1 focus:ring-red-500 focus:outline-none;
+	}
+
+	.button-icon {
+		@apply flex shrink-0 items-center justify-center rounded-r-md border border-zinc-700 bg-zinc-800 px-3 text-zinc-400 transition-colors hover:border-zinc-600 hover:text-rose-500 focus:z-10 focus:border-rose-500 focus:ring-2 focus:ring-rose-500 focus:outline-none;
+	}
+
+	.card {
+		@apply relative flex flex-col rounded-lg border border-zinc-700 bg-zinc-800 p-6 shadow-lg transition-all duration-150 ease-in-out focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-500 focus-within:ring-offset-2 focus-within:ring-offset-zinc-800 hover:-translate-y-1;
+	}
+
+	.page-header {
+		@apply mb-16 md:mb-24;
+	}
+
+	.page-title {
+		@apply text-3xl font-medium text-zinc-100 md:text-4xl;
+	}
+}

@@ -1,0 +1,34 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "personal-site",
+	"compatibility_date": "2026-07-16",
+	"compatibility_flags": ["nodejs_als"],
+	"main": ".svelte-kit/cloudflare/_worker.js",
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".svelte-kit/cloudflare"
+	},
+	"workers_dev": true,
+	"preview_urls": true,
+	"routes": [
+		{ "pattern": "sh4jid.me", "custom_domain": true },
+		{ "pattern": "www.sh4jid.me", "custom_domain": true }
+	],
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "personal-site-db",
+			"database_id": "6deb9b63-97f6-49e9-b2c6-bc88d797d788",
+			"migrations_dir": "drizzle"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "IMAGES",
+			"bucket_name": "personal-site-images"
+		}
+	],
+	"vars": {
+		"ORIGIN": "https://sh4jid.me"
+	}
+}

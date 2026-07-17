@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1784214746467,
+      "tag": "0000_unknown_misty_knight",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1784232873475,
+      "tag": "0001_far_fallen_one",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1784264042199,
+      "tag": "0002_cheerful_cammi",
+      "breakpoints": true
+    }
+  ]
+}

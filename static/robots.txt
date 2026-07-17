@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://sh4jid.me/sitemap.xml
+
+# Disallow crawling of dynamic utility pages and admin
+Disallow: /l/
+Disallow: /n/
+Disallow: /p/
+Disallow: /admin
+
+# Allow important pages
+Allow: /blog
+Allow: /projects
