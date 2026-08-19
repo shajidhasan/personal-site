@@ -1,20 +1,44 @@
 {
 	"name": "@sh4jid/cli",
 	"version": "0.1.0",
-	"description": "Share notes, pastes, and short links to your site from the terminal.",
+	"description": "Share notes, pastes, and short links to your own site from the terminal.",
+	"keywords": [
+		"cli",
+		"pastebin",
+		"url-shortener",
+		"notes",
+		"markdown",
+		"sveltekit",
+		"cloudflare-workers"
+	],
+	"homepage": "https://github.com/shajidhasan/personal-site/tree/main/packages/cli#readme",
+	"bugs": "https://github.com/shajidhasan/personal-site/issues",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/shajidhasan/personal-site.git",
+		"directory": "packages/cli"
+	},
+	"license": "MIT",
+	"author": "Shajid Hasan",
 	"type": "module",
 	"bin": {
 		"sh4": "./dist/index.js"
 	},
 	"files": [
-		"dist"
+		"dist",
+		"LICENSE",
+		"README.md"
 	],
+	"engines": {
+		"node": ">=20"
+	},
 	"publishConfig": {
 		"access": "public"
 	},
 	"scripts": {
 		"build": "tsup",
-		"dev": "tsup --watch"
+		"dev": "tsup --watch",
+		"prepublishOnly": "tsup"
 	},
 	"dependencies": {
 		"@clack/prompts": "^0.11.0",
