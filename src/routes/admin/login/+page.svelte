@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { authClient } from '$lib/auth-client';
 	import LockIcon from '@lucide/svelte/icons/lock';
 
@@ -10,6 +11,12 @@
 	let password: string = $state('');
 	let loading: boolean = $state(false);
 	let errorMessage: string = $state('');
+
+	// Only same-site paths, so ?redirectTo= can't be used as an open redirect.
+	const destination = $derived.by(() => {
+		const target = page.url.searchParams.get('redirectTo') ?? '';
+		return target.startsWith('/') && !target.startsWith('//') ? target : '/admin';
+	});
 
 	const handleSubmit = async (e: Event) => {
 		e.preventDefault();
@@ -25,7 +32,7 @@
 		}
 
 		// Full reload so the session cookie is picked up by the server hooks.
-		window.location.href = '/admin';
+		window.location.href = destination;
 	};
 </script>
 

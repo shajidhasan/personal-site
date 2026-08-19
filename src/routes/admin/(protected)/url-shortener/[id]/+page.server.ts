@@ -3,19 +3,7 @@ import { eq } from 'drizzle-orm';
 import { getDb } from '$lib/server/db';
 import { shortLink } from '$lib/server/db/schema';
 import { isUniqueConstraintError } from '$lib/server/blog-form';
-
-const parseLinkForm = (formData: FormData) => {
-	const str = (name: string) => {
-		const value = formData.get(name);
-		return typeof value === 'string' ? value : '';
-	};
-
-	return {
-		destinationUrl: str('destinationUrl').trim(),
-		alias: str('alias').trim(),
-		message: str('message').trim() || null
-	};
-};
+import { parseLinkForm, validateLink } from '$lib/server/link-form';
 
 export const load = async ({ params, platform }) => {
 	const db = getDb(platform!.env.DB);
@@ -28,21 +16,14 @@ export const load = async ({ params, platform }) => {
 
 export const actions = {
 	default: async ({ params, request, platform }) => {
-		const values = parseLinkForm(await request.formData());
-		if (!values.destinationUrl) {
-			return fail(400, {
-				message: 'Destination URL is required.',
-				errors: { destinationUrl: 'Destination URL is required.' }
-			});
-		}
-		if (!values.alias) {
-			return fail(400, { message: 'Alias is required.', errors: { alias: 'Alias is required.' } });
-		}
+		// The alias field is prefilled on this form, so an empty one must not silently re-alias.
+		const parsed = validateLink(parseLinkForm(await request.formData()), { requireAlias: true });
+		if (!parsed.values) return fail(400, { message: parsed.error });
 
 		const db = getDb(platform!.env.DB);
 
 		try {
-			await db.update(shortLink).set(values).where(eq(shortLink.id, params.id));
+			await db.update(shortLink).set(parsed.values).where(eq(shortLink.id, params.id));
 		} catch (e) {
 			if (isUniqueConstraintError(e)) {
 				return fail(400, {

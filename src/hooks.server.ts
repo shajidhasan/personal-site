@@ -19,7 +19,11 @@ const handleBetterAuth: Handle = async ({ event, resolve }) => {
 	event.locals.auth = createAuth(event.platform.env.DB);
 
 	const { auth } = event.locals;
-	const session = await auth.api.getSession({ headers: event.request.headers });
+
+	// The apiKey plugin throws when an x-api-key header is present but revoked or malformed.
+	// That must read as "not signed in", not fail the whole request with a 500 — otherwise a
+	// stale CLI credential breaks every route it touches instead of prompting a re-login.
+	const session = await auth.api.getSession({ headers: event.request.headers }).catch(() => null);
 
 	if (session) {
 		event.locals.session = session.session;

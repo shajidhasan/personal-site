@@ -1,7 +1,9 @@
 import tailwindcss from '@tailwindcss/vite';
 import adapter from '@sveltejs/adapter-cloudflare';
 import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig, type Plugin } from 'vite';
+import type { Plugin } from 'vite';
+// vitest/config re-exports defineConfig with the `test` option typed in.
+import { defineConfig } from 'vitest/config';
 import path from 'node:path';
 
 // Client-only heavyweights (marked + shiki ~2MB gzip; CodeMirror) run in the admin
@@ -50,5 +52,9 @@ export default defineConfig({
 				}
 			}
 		})
-	]
+	],
+	test: {
+		include: ['src/**/*.test.ts', 'packages/cli/src/**/*.test.ts'],
+		environment: 'node'
+	}
 });

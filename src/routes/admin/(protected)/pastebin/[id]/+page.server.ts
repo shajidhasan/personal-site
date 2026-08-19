@@ -3,21 +3,7 @@ import { eq } from 'drizzle-orm';
 import { getDb } from '$lib/server/db';
 import { paste } from '$lib/server/db/schema';
 import { isUniqueConstraintError } from '$lib/server/blog-form';
-
-const parsePasteForm = (formData: FormData) => {
-	const str = (name: string) => {
-		const value = formData.get(name);
-		return typeof value === 'string' ? value : '';
-	};
-
-	return {
-		title: str('title').trim(),
-		alias: str('alias').trim(),
-		language: str('language').trim() || 'plaintext',
-		content: str('content'),
-		contentHtml: str('contentHtml')
-	};
-};
+import { parsePasteForm, validatePaste } from '$lib/server/paste-form';
 
 export const load = async ({ params, platform }) => {
 	const db = getDb(platform!.env.DB);
@@ -30,21 +16,14 @@ export const load = async ({ params, platform }) => {
 
 export const actions = {
 	default: async ({ params, request, platform }) => {
-		const values = parsePasteForm(await request.formData());
-		if (!values.title) {
-			return fail(400, { message: 'Title is required.', errors: { title: 'Title is required.' } });
-		}
-		if (!values.alias) {
-			return fail(400, { message: 'Alias is required.', errors: { alias: 'Alias is required.' } });
-		}
-		if (!values.content.trim()) {
-			return fail(400, { message: 'Content is required.' });
-		}
+		// The alias field is prefilled on this form, so an empty one must not silently re-alias.
+		const parsed = validatePaste(parsePasteForm(await request.formData()), { requireAlias: true });
+		if (!parsed.values) return fail(400, { message: parsed.error });
 
 		const db = getDb(platform!.env.DB);
 
 		try {
-			await db.update(paste).set(values).where(eq(paste.id, params.id));
+			await db.update(paste).set(parsed.values).where(eq(paste.id, params.id));
 		} catch (e) {
 			if (isUniqueConstraintError(e)) {
 				return fail(400, {

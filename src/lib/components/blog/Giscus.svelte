@@ -30,6 +30,10 @@
 			script.setAttribute(key, value);
 		}
 
+		// giscus renders its iframe as a sibling of its own script tag, so the script has to live
+		// inside this container. Svelte renders no children into it, so there is no markup for the
+		// runtime to lose track of.
+		// eslint-disable-next-line svelte/no-dom-manipulating
 		container.appendChild(script);
 
 		// Keep the giscus iframe in sync with the site's theme toggle

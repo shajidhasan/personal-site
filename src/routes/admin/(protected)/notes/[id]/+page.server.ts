@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { getDb } from '$lib/server/db';
 import { note } from '$lib/server/db/schema';
 import { isUniqueConstraintError } from '$lib/server/blog-form';
-import { generateRandomString } from '$lib/utilities';
+import { parseNoteForm, validateNote } from '$lib/server/note-form';
 
 export const load = async ({ params, platform }) => {
 	const db = getDb(platform!.env.DB);
@@ -16,28 +16,14 @@ export const load = async ({ params, platform }) => {
 
 export const actions = {
 	default: async ({ params, request, platform }) => {
-		const formData = await request.formData();
-		const title = ((formData.get('title') as string | null) ?? '').trim();
-		const alias = ((formData.get('alias') as string | null) ?? '').trim();
-		const content = (formData.get('content') as string | null) ?? '';
-		const contentHtml = (formData.get('contentHtml') as string | null) ?? '';
-
-		if (!title) {
-			return fail(400, { message: 'Title is required.', errors: { title: 'Title is required.' } });
-		}
+		// The alias field is prefilled on this form, so an empty one must not silently re-alias.
+		const parsed = validateNote(parseNoteForm(await request.formData()), { requireAlias: true });
+		if (!parsed.values) return fail(400, { message: parsed.error });
 
 		const db = getDb(platform!.env.DB);
 
 		try {
-			await db
-				.update(note)
-				.set({
-					title,
-					alias: alias || generateRandomString(8).toLowerCase(),
-					content,
-					contentHtml
-				})
-				.where(eq(note.id, params.id));
+			await db.update(note).set(parsed.values).where(eq(note.id, params.id));
 		} catch (e) {
 			if (isUniqueConstraintError(e)) {
 				return fail(400, {
@@ -48,6 +34,6 @@ export const actions = {
 			return fail(500, { message: 'Failed to update note. Please try again.' });
 		}
 
-		return { message: 'Note updated.' };
+		return { message: 'Note updated.', alias: parsed.values.alias };
 	}
 };

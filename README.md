@@ -8,6 +8,7 @@ My personal site and its admin panel, one SvelteKit app on Cloudflare Workers. I
 - Comments on posts via [giscus](https://giscus.app)
 - Pages for projects and research publications; the research page appears only when it has entries
 - URL shortener (`/l/hi`), shareable notes (`/n/hello`), and a pastebin (`/p/snippet`)
+- `sh4`, a CLI for creating and managing those three from a terminal on any machine
 - Admin panel at `/admin` where you write and manage everything: posts, projects, images, short links, site settings
 - Image uploads stored in R2, served from `/images/<key>`
 - RSS feed and sitemap
@@ -16,7 +17,7 @@ My personal site and its admin panel, one SvelteKit app on Cloudflare Workers. I
 
 ## How it works
 
-SvelteKit 2 + Svelte 5, Tailwind 4. Content lives in D1 (queried with Drizzle), images in R2. Markdown is rendered to HTML in your browser when you save a post, so the Worker never has to bundle shiki. The admin editors are CodeMirror 6, kept out of the Worker the same way (see the SSR stubs in `vite.config.ts`).
+SvelteKit 2 + Svelte 5, Tailwind 4. Content lives in D1 (queried with Drizzle), images in R2. Markdown is rendered to HTML in your browser when you save a post, so the Worker never has to bundle shiki. The admin editors are CodeMirror 6, kept out of the Worker the same way (see the SSR stubs in `vite.config.ts`). The CLI renders with the same module, so what it uploads is identical to what the admin panel produces.
 
 Your name, bio, social links, and SEO meta are rows in the `setting` table, edited at `/admin/settings`. The defaults in `src/lib/server/settings.ts` get deep-merged under whatever you save there, so they double as the seed and there is no settings migration to run.
 
@@ -29,6 +30,8 @@ pnpm dev
 ```
 
 The dev server emulates D1 and R2 automatically. Local state goes in `.wrangler/state/`, completely separate from production.
+
+`pnpm test` runs the unit tests (form validation and the CLI's inference and config handling).
 
 To create your local admin account: copy `.env.example` to `.env`, set `ALLOW_SIGNUP="true"`, then
 
@@ -70,6 +73,38 @@ pnpm build && pnpm exec wrangler deploy
 ```
 
 Create the production admin account the same way as locally: temporarily set `ALLOW_SIGNUP` (with `wrangler versions secret put`), sign up once, remove it. Or copy your local `user` and `account` rows into remote D1; the password hash is portable.
+
+## The `sh4` CLI
+
+`packages/cli` is a companion CLI for the notes, pastebin, and URL shortener. Install it anywhere:
+
+```sh
+npm i -g @sh4jid/cli
+sh4 login
+```
+
+`sh4 login` prints a code and a URL. Open the URL in a browser where you're signed in to `/admin`, confirm the code, and approve. The CLI then stores its own API key in `~/.config/sh4/config.json` (mode `0600`). Each machine gets a separate key, named after its hostname, revocable on its own.
+
+```sh
+sh4 note report.md -a q3            # → /n/q3          (alias: sh4 n)
+cat notes.md | sh4 n                # reads stdin, random alias
+sh4 paste main.ts                   # → /p/<random>    (alias: sh4 p)
+sh4 link https://example.com -a ex  # → /l/ex          (alias: sh4 l)
+
+sh4 ls n                            # tab-separated, pipeable
+sh4                                 # interactive picker: copy, open, or delete
+```
+
+Every create prints the URL and copies it to your clipboard; `-o` also opens it, and `-f` overwrites an existing alias instead of failing. Note titles come from `-t`, else the first `# heading`, else the filename, else `Untitled`. Paste languages come from the file extension unless you pass `-l`.
+
+Point it at a different site — a fork, or your dev server — with `sh4 login --base-url https://example.com`.
+
+Publishing after a change:
+
+```sh
+pnpm --filter @sh4jid/cli build
+pnpm --filter @sh4jid/cli publish --access public
+```
 
 ## Make it yours
 
