@@ -1,7 +1,7 @@
 import { redirect, type Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { building } from '$app/environment';
-import { createAuth } from '$lib/server/auth';
+import { API_KEY_SCOPE, createAuth } from '$lib/server/auth';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
 
 // The old site's canonical host was www; the worker serves both but apex is canonical.
@@ -20,10 +20,24 @@ const handleBetterAuth: Handle = async ({ event, resolve }) => {
 
 	const { auth } = event.locals;
 
-	// The apiKey plugin throws when an x-api-key header is present but revoked or malformed.
-	// That must read as "not signed in", not fail the whole request with a 500 — otherwise a
-	// stale CLI credential breaks every route it touches instead of prompting a re-login.
-	const session = await auth.api.getSession({ headers: event.request.headers }).catch(() => null);
+	// An API key resolves to a full session, so it must only work on the CLI's own surface.
+	// better-auth's own routes are covered by customAPIKeyGetter in auth.ts, but that getter
+	// sees no request object on this direct call — so scope it here too, or a key would
+	// authenticate /admin. Two code paths, two guards.
+	const usedApiKey = event.request.headers.has('x-api-key');
+	let headers = event.request.headers;
+	if (usedApiKey && !event.url.pathname.startsWith(API_KEY_SCOPE)) {
+		headers = new Headers(headers);
+		headers.delete('x-api-key');
+	}
+
+	// A revoked or malformed key makes the apiKey plugin throw; that must read as "not signed
+	// in" rather than a 500, so a stale CLI credential prompts a re-login instead of breaking
+	// every route. Only swallow it for key-bearing requests — a transient D1 failure on a
+	// normal request should surface as an error, not masquerade as a revoked credential.
+	const session = usedApiKey
+		? await auth.api.getSession({ headers }).catch(() => null)
+		: await auth.api.getSession({ headers });
 
 	if (session) {
 		event.locals.session = session.session;

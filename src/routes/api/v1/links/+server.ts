@@ -4,7 +4,14 @@ import { getDb } from '$lib/server/db';
 import { shortLink } from '$lib/server/db/schema';
 import { isUniqueConstraintError } from '$lib/server/blog-form';
 import { validateLink } from '$lib/server/link-form';
-import { jsonError, requireSession, resourceUrl } from '$lib/server/api-auth';
+import {
+	checkStringFields,
+	isTrue,
+	jsonError,
+	parseJsonBody,
+	requireSession,
+	resourceUrl
+} from '$lib/server/api-auth';
 
 export const GET = async ({ locals, platform, url }) => {
 	requireSession(locals);
@@ -30,14 +37,13 @@ export const GET = async ({ locals, platform, url }) => {
 export const POST = async ({ locals, platform, request, url }) => {
 	requireSession(locals);
 
-	let body: unknown;
-	try {
-		body = await request.json();
-	} catch {
-		return jsonError(400, 'Body must be valid JSON.');
-	}
+	const parsedBody = await parseJsonBody(request);
+	if (!parsedBody.body) return jsonError(400, parsedBody.error);
 
-	const { overwrite = false, ...input } = (body ?? {}) as Record<string, unknown>;
+	const { overwrite, ...input } = parsedBody.body;
+	const typeError = checkStringFields(input, ['destinationUrl', 'alias', 'message']);
+	if (typeError) return jsonError(400, typeError);
+
 	const parsed = validateLink(input);
 	if (!parsed.values) return jsonError(400, parsed.error);
 
@@ -50,7 +56,7 @@ export const POST = async ({ locals, platform, request, url }) => {
 	} catch (e) {
 		if (!isUniqueConstraintError(e)) throw e;
 
-		if (!overwrite) {
+		if (!isTrue(overwrite)) {
 			return jsonError(409, `Alias "${alias}" is already taken.`);
 		}
 

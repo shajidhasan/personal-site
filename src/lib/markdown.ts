@@ -38,7 +38,7 @@ const lineNumbersTransformer: ShikiTransformer = {
 	}
 };
 
-export const highlightCode = async (code: string, lang: string): Promise<string> =>
+const highlight = (code: string, lang: string): Promise<string> =>
 	codeToHtml(code, {
 		lang,
 		themes: {
@@ -47,6 +47,17 @@ export const highlightCode = async (code: string, lang: string): Promise<string>
 		},
 		transformers: [lineNumbersTransformer]
 	});
+
+// shiki throws on a language it doesn't bundle, so an unknown or mistyped fence would
+// otherwise fail the whole document — losing a note or blocking a post from saving.
+// Render it unhighlighted instead.
+export const highlightCode = async (code: string, lang: string): Promise<string> => {
+	try {
+		return await highlight(code, lang);
+	} catch {
+		return highlight(code, 'text');
+	}
+};
 
 export const marked = new Marked().use(
 	markedShiki({

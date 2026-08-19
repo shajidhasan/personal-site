@@ -12,10 +12,20 @@
 	let loading: boolean = $state(false);
 	let errorMessage: string = $state('');
 
-	// Only same-site paths, so ?redirectTo= can't be used as an open redirect.
+	// Only same-origin destinations, so ?redirectTo= can't become an open redirect. Resolving
+	// against the real origin is what makes this safe: a prefix check would accept
+	// "/\evil.example", which browsers normalise to "//evil.example" and follow off-site.
 	const destination = $derived.by(() => {
-		const target = page.url.searchParams.get('redirectTo') ?? '';
-		return target.startsWith('/') && !target.startsWith('//') ? target : '/admin';
+		const target = page.url.searchParams.get('redirectTo');
+		if (!target) return '/admin';
+
+		try {
+			const resolved = new URL(target, page.url.origin);
+			if (resolved.origin !== page.url.origin) return '/admin';
+			return `${resolved.pathname}${resolved.search}${resolved.hash}`;
+		} catch {
+			return '/admin';
+		}
 	});
 
 	const handleSubmit = async (e: Event) => {

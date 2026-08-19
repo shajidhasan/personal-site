@@ -6,6 +6,9 @@ import { apiKey, bearer, deviceAuthorization } from 'better-auth/plugins';
 import { getRequestEvent } from '$app/server';
 import { getDb } from '$lib/server/db';
 
+/** The only path prefix on which an `x-api-key` header is honoured. */
+export const API_KEY_SCOPE = '/api/v1';
+
 const authConfig = {
 	baseURL: env.ORIGIN,
 	secret: env.BETTER_AUTH_SECRET,
@@ -27,6 +30,18 @@ const authConfig = {
 			// Off by default: without it, an `x-api-key` header never resolves to a session,
 			// so getSession() in hooks.server.ts would leave every API request unauthenticated.
 			enableSessionForAPIKeys: true,
+			// ...but that makes a key equivalent to a full admin session, so confine where one
+			// is even read. Without this, a leaked CLI key could browse /admin and — worse —
+			// POST /api/auth/api-key/create to mint a replacement that survives revoking it.
+			// This getter is the plugin's own hook for locating the key, so it also covers
+			// better-auth's internal routes, which never see our SvelteKit hook's headers.
+			customAPIKeyGetter: (ctx) => {
+				const url = ctx.request?.url;
+				// A direct server-side getSession() call carries no request object; those come
+				// from hooks.server.ts, which strips the header itself on out-of-scope paths.
+				if (url && !new URL(url).pathname.startsWith(API_KEY_SCOPE)) return null;
+				return ctx.headers?.get('x-api-key') ?? null;
+			},
 			rateLimit: { enabled: true, timeWindow: 1000 * 60 * 60, maxRequests: 1000 }
 		}),
 		sveltekitCookies(getRequestEvent) // make sure this is the last plugin in the array

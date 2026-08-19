@@ -143,5 +143,11 @@ export const whoami = async (): Promise<void> => {
 		fail("Access revoked. Run 'sh4 login'.");
 	}
 
+	// Anything else non-2xx means the check did not actually pass — reporting "logged in" off
+	// the back of a 500 or a 429 would be a lie about the one thing this command exists to say.
+	if (!response!.ok) {
+		fail(`${config!.baseUrl} answered ${response!.status}; could not confirm the credential.`);
+	}
+
 	p.log.success(`Logged in to ${config!.baseUrl} (key ending ...${config!.apiKey.slice(-6)}).`);
 };

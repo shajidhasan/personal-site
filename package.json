@@ -23,11 +23,18 @@
 		"db:apply:remote": "wrangler d1 migrations apply personal-site-db --remote",
 		"auth:schema": "better-auth generate --config src/lib/server/auth.ts --output src/lib/server/db/auth.schema.ts --yes"
 	},
+	"pnpm": {
+		"overrides": {
+			"cookie": ">=0.7.0",
+			"nanoid": ">=3.3.18",
+			"postcss": ">=8.5.23"
+		}
+	},
 	"devDependencies": {
 		"@better-auth/cli": "~1.4.21",
 		"@eslint/js": "^10.0.1",
 		"@sveltejs/adapter-cloudflare": "^7.2.8",
-		"@sveltejs/kit": "^2.63.0",
+		"@sveltejs/kit": "^2.70.3",
 		"@sveltejs/vite-plugin-svelte": "^7.1.2",
 		"@tailwindcss/forms": "^0.5.11",
 		"@tailwindcss/typography": "^0.5.19",

@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 
@@ -30,8 +30,11 @@ export const readConfig = (): Config | null => {
 
 export const writeConfig = (config: Config): void => {
 	const path = configPath();
-	mkdirSync(dirname(path), { recursive: true });
+	mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
 	writeFileSync(path, `${JSON.stringify(config, null, 2)}\n`, { mode: 0o600 });
+	// writeFileSync's mode only applies when it creates the file, so an existing config that
+	// was somehow world-readable would stay that way. This holds an API key — enforce it.
+	chmodSync(path, 0o600);
 };
 
 export const clearConfig = (): void => {

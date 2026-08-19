@@ -59,3 +59,19 @@ describe('config', () => {
 		expect(() => clearConfig()).not.toThrow();
 	});
 });
+
+describe('config file permissions', () => {
+	it('tightens an existing world-readable config, which writeFileSync alone would not', () => {
+		mkdirSync(join(home, 'sh4'), { recursive: true });
+		writeFileSync(configPath(), '{}', { mode: 0o644 });
+		expect(statSync(configPath()).mode & 0o777).toBe(0o644);
+
+		writeConfig({ baseUrl: 'https://sh4jid.me', apiKey: 'secret' });
+		expect(statSync(configPath()).mode & 0o777).toBe(0o600);
+	});
+
+	it('creates the containing directory owner-only', () => {
+		writeConfig({ baseUrl: 'https://sh4jid.me', apiKey: 'secret' });
+		expect(statSync(join(home, 'sh4')).mode & 0o777).toBe(0o700);
+	});
+});
